@@ -6,10 +6,19 @@ interface ItemDetailsModalProps {
   item: Item | null;
   onClose: () => void;
   onAddToCart: (item: Item) => void;
+  currency?: { code: string; symbol: string; rate: number };
 }
 
-export default function ItemDetailsModal({ item, onClose, onAddToCart }: ItemDetailsModalProps) {
+export default function ItemDetailsModal({ item, onClose, onAddToCart, currency }: ItemDetailsModalProps) {
   if (!item) return null;
+
+  const formatPrice = (usdPrice: number) => {
+    if (!currency) {
+      return `$${usdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const converted = usdPrice * currency.rate;
+    return `${currency.symbol} ${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -78,11 +87,11 @@ export default function ItemDetailsModal({ item, onClose, onAddToCart }: ItemDet
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest block mb-1">Price</span>
               <div className="flex items-baseline gap-2.5">
                 <span className="text-2xl font-black text-slate-900 font-mono">
-                  ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatPrice(item.price)}
                 </span>
                 {item.originalPrice && (
                   <span className="text-sm text-slate-400 line-through font-mono">
-                    ${item.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatPrice(item.originalPrice)}
                   </span>
                 )}
                 {item.originalPrice && (

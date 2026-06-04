@@ -13,6 +13,9 @@ import ItemDetailsModal from './components/ItemDetailsModal';
 import CartModal from './components/CartModal';
 import Dashboard from './components/Dashboard';
 import GitAssistant from './components/GitAssistant';
+import MoscoviumAds, { MoscoviumAd, INITIAL_ADS } from './components/MoscoviumAds';
+import CurrencyConverter, { CURRENCIES } from './components/CurrencyConverter';
+import { playCashRegisterSound, playNotificationSound } from './lib/audio';
 
 // Multi-language Translation Packs
 const TRANSLATIONS: Record<string, Record<string, string>> = {
@@ -37,7 +40,40 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     popularHeader: "Hot right now - Popular Items",
     recommendedHeader: "Just for You - Personalized Picks",
     trendingServices: "Most In-Demand Services Today",
-    featuredShops: "Featured Top-Rated Merchant Boutiques"
+    featuredShops: "Featured Top-Rated Merchant Boutiques",
+    allCategories: "All Categories",
+    shopByCategory: "Shop by department category",
+    liveCatalogue: "LIVE CATALOGUE",
+    matchingListings: "matching listing(s) found",
+    searchNoResult: "We couldn't find items that match your search filters.",
+    resetFilters: "Reset all filters and view full catalogue",
+    customGitTitle: "Git upload wizard",
+    merchantPortal: "Merchant Portal",
+    homeTitle0: "Any Skill. Any Service. One Global Platform.",
+    homeDesc0: "Legal consulting, software engineering, physical crafts, custom hardware – list your capability instantly, earn escrow rewards securely.",
+    homeAction0: "List Your Service",
+    homeTitle1: "List Unique Handmade Treasures",
+    homeDesc1: "Explore bespoke mahogany sculptures, traditional handwoven sisal totes, and rare collectible loose gemstones from verified global artisans.",
+    homeAction1: "Shop Handmade",
+    homeTitle2: "Next-Gen Tech Graphic Nodes",
+    homeDesc2: "Instant orders on premium consumer electronics, high-processing GPU silicon nodes, and re-mappable mechanical media controllers.",
+    homeAction2: "Explore Electronics",
+    checkGitWizard: "Check Git Upload Wizard",
+    escrowShieldTitle: "Buyer/Seller Protected Escrow Escort",
+    escrowShieldDesc: "Escrow security locks payouts until listing confirmation matches.",
+    globalLogisticsTitle: "Global Logistics & Local Despatches",
+    globalLogisticsDesc: "Sellers coordinate physical dropshipping or instant links securely.",
+    curatedTrendingTitle: "Curated Trending Picks Daily",
+    curatedTrendingDesc: "Review verified rating scores and purchase ledger counts.",
+    "All Vehicles/Parts": "All Vehicles/Parts",
+    "Art & Collectibles": "Art & Collectibles",
+    "Digital Downloads": "Digital Downloads",
+    "Fashion/Beauty": "Fashion/Beauty",
+    "Home/Office/Lifestyle": "Home/Office/Lifestyle",
+    "Industrial Equipment/Tools": "Industrial Equipment/Tools",
+    "Real Estate/Property": "Real Estate/Property",
+    "Services": "Services",
+    "Electronics": "Electronics"
   },
   sw: {
     tagline: "Gundua Bidhaa, Huduma & Upakuaji wa Kidijitali mbali mbali",
@@ -60,18 +96,446 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     popularHeader: "Zinazopendwa Sasa Hivi - Bidhaa Moto",
     recommendedHeader: "Kwa Ajili Yako Tu - Chaguo Zilizopendekezwa",
     trendingServices: "Huduma Zinazohitajika Zaidi Leo",
-    featuredShops: "Maduka ya Juu ya Wafanyabiashara Waliomakinika"
+    featuredShops: "Maduka ya Juu ya Wafanyabiashara Waliomakinika",
+    allCategories: "Kategoria Zote",
+    shopByCategory: "Nunua kwa kategoria ya idara",
+    liveCatalogue: "KATALOGI YA SASA",
+    matchingListings: "orodha inayolingana imepatikana",
+    searchNoResult: "Hatukuweza kupata bidhaa zinazolingana na vichujio vyako vya utafutaji.",
+    resetFilters: "Weka upya vichujio vyote na uangalie katalogi kamili",
+    customGitTitle: "Msaidizi wa kupakia Git",
+    merchantPortal: "Portal ya Mfanyabiashara",
+    homeTitle0: "Ustadi Wowote. Huduma Yoyote. Jukwaa Moja la Kimataifa.",
+    homeDesc0: "Ushauri wa kisheria, uhandisi wa programu, ufundi wa kimwili, vifaa maalum - orodhesha uwezo wako papo hapo, pata tuzo za escrow salama.",
+    homeAction0: "Orodhesha Huduma Yako",
+    homeTitle1: "Orodhesha Hazina za Kipekee za Kazi ya Mikono",
+    homeDesc1: "Gundua sanamu za mahogany zilizotengenezwa maalum, mifuko ya kitamaduni ya sisal, na vito adimu vya thamani kutoka kwa mafundi wa kimataifa.",
+    homeAction1: "Nunua za Mikono",
+    homeTitle2: "Nodi za Picha za Teknolojia ya Kizazi Kijacho",
+    homeDesc2: "Agizo za haraka kwenye vifaa vya elektroniki vya kiwango cha juu, nodi za GPU za nguvu za usindikaji thabiti, na vidhibiti vya habari vya kiufundi.",
+    homeAction2: "Gundua Vifaa vya Elektroniki",
+    checkGitWizard: "Angalia Msaidizi wa Git",
+    escrowShieldTitle: "Ulinzi wa Mnunuzi na Muuzaji na Dhamana",
+    escrowShieldDesc: "Ulinzi wa Escrow hufunga malipo hadi uthibitisho wa bidhaa upatikane.",
+    globalLogisticsTitle: "Usafirishaji wa Kimataifa na Wauzaji wa Ndani",
+    globalLogisticsDesc: "Wauzaji huratibu usafirishaji wa kimwili au viungo vya papo hapo kwa usalama.",
+    curatedTrendingTitle: "Chaguo Maalum Zinazovuma Kila Siku",
+    curatedTrendingDesc: "Kagua alama za kukadiria zilizoidhinishwa na idadi ya mauzo.",
+    "All Vehicles/Parts": "Magari na Vipuri Vyote",
+    "Art & Collectibles": "Sanaa na Vitu vya Thamani",
+    "Digital Downloads": "Upakuaji wa Kidijitali",
+    "Fashion/Beauty": "Mitindo na Urembo",
+    "Home/Office/Lifestyle": "Nyumbani/Ofisini/Maisha",
+    "Industrial Equipment/Tools": "Vifaa vya Viwandani/Zana",
+    "Real Estate/Property": "Majengo na Mali",
+    "Services": "Huduma",
+    "Electronics": "Vifaa vya Elektroniki"
+  },
+  es: {
+    tagline: "Descubre productos, servicios y descargas digitales en todo el mundo",
+    searchPlaceholder: "Buscar productos, servicios, tiendas...",
+    listings: "Anuncios",
+    shops: "Tiendas",
+    sell: "Consola de Vendedor",
+    cart: "Carrito",
+    login: "Iniciar sesión",
+    register: "Crear Cuenta",
+    protection: "Garante de Depósito en Garantía Protegido",
+    globalShipping: "Logística Global y Envíos Locales",
+    curatedPicks: "Selecciones de Tendencia Diarias",
+    whoTitle: "¿Qué es Moscovium115?",
+    whoDesc: "Nombrado en honor al elemento superpesado, Moscovium115 es un mercado global de alta energía donde los creadores listan artesanías físicas, activos tecnológicos y servicios de consultoría al instante.",
+    statsBuyers: "50k+ Compradores Activos",
+    statsSellers: "10k+ Comerciantes",
+    statsCountries: "80+ Regiones Soberanas",
+    contactUs: "Asistente de Publicación Git",
+    popularHeader: "Populares en este momento",
+    recommendedHeader: "Solo para ti - Selecciones personalizadas",
+    trendingServices: "Servicios más solicitados hoy",
+    featuredShops: "Boutiques de comerciantes mejor valoradas",
+    allCategories: "Todas las Categorías",
+    shopByCategory: "Comprar por categoría de departamento",
+    liveCatalogue: "CATÁLOGO EN VIVO",
+    matchingListings: "anuncio(s) coincidente(s) encontrado(s)",
+    searchNoResult: "No pudimos encontrar artículos que coincidan con sus filtros de búsqueda.",
+    resetFilters: "Restablecer todos los filtros y ver catálogo completo",
+    customGitTitle: "Asistente de carga Git",
+    merchantPortal: "Portal del comerciante",
+    homeTitle0: "Cualquier habilidad. Cualquier servicio. Una plataforma global.",
+    homeDesc0: "Asesoría legal, ingeniería de software, artesanías físicas, hardware personalizado: enumere su capacidad al instante, gane de forma segura.",
+    homeAction0: "Anuncie su Servicio",
+    homeTitle1: "Encuentre un tesoro hecho a mano único",
+    homeDesc1: "Explore esculturas de caoba personalizadas, bolsos tradicionales de sisal y gemas preciosas sueltas de artesanos globales verificados.",
+    homeAction1: "Comprar Hecho a Mano",
+    homeTitle2: "Nodos de procesamiento gráfico de última generación",
+    homeDesc2: "Pedidos instantáneos de electrónica de consumo premium, nodos de GPU de alto procesamiento y controladores mecánicos configurables.",
+    homeAction2: "Explorar Electrónica",
+    checkGitWizard: "Ver Asistente Git",
+    escrowShieldTitle: "Garante de Depósito en Garantía Protegido",
+    escrowShieldDesc: "La seguridad del depósito en garantía retiene los pagos hasta que se aprueben los términos.",
+    globalLogisticsTitle: "Logística Global y Envíos Locales",
+    globalLogisticsDesc: "Los vendedores coordinan logística física o enlaces de descarga rápidos.",
+    curatedTrendingTitle: "Selecciones de Tendencia Diarias",
+    curatedTrendingDesc: "Revise las calificaciones de confianza y el historial de transacciones.",
+    "All Vehicles/Parts": "Vehículos y Autopartes",
+    "Art & Collectibles": "Arte y Coleccionables",
+    "Digital Downloads": "Descargas Digitales",
+    "Fashion/Beauty": "Moda y Belleza",
+    "Home/Office/Lifestyle": "Hogar/Oficina/Estilo de vida",
+    "Industrial Equipment/Tools": "Equipos Industriales y Zanas",
+    "Real Estate/Property": "Bienes Raíces y Propiedades",
+    "Services": "Servicios Profesionales",
+    "Electronics": "Electrónica"
+  },
+  fr: {
+    tagline: "Découvrez des produits, services et téléchargements numériques dans le monde entier",
+    searchPlaceholder: "Rechercher des produits, services, boutiques...",
+    listings: "Annonces",
+    shops: "Boutiques",
+    sell: "Console Vendeur",
+    cart: "Panier",
+    login: "Se connecter",
+    register: "Créer un compte",
+    protection: "Escorte d'Escrow Sécurisée Acheteur/Vendeur",
+    globalShipping: "Logistique Globale & Envois Locaux",
+    curatedPicks: "Sélections Tendances Quotidiennes",
+    whoTitle: "Qu'est-ce que Moscovium115?",
+    whoDesc: "Nommé d'après l'élément superlourd, Moscovium115 est un marché mondial à haute énergie où les créateurs répertorient instantanément des objets physiques, des actifs technologiques et des services.",
+    statsBuyers: "50k+ Acheteurs Actifs",
+    statsSellers: "10k+ Marchands",
+    statsCountries: "80+ Régions Souveraines",
+    contactUs: "Assistant de Publication Git",
+    popularHeader: "Populaire en ce moment",
+    recommendedHeader: "Juste pour vous - Sélections personnalisées",
+    trendingServices: "Services les plus demandés aujourd'hui",
+    featuredShops: "Boutiques de marchands les mieux notées",
+    allCategories: "Toutes les Catégories",
+    shopByCategory: "Acheter par catégorie de département",
+    liveCatalogue: "CATALOGUE EN DIRECT",
+    matchingListings: "annonce(s) correspondante(s) trouvée(s)",
+    searchNoResult: "Nous n'avons trouvé aucun article correspondant à vos filtres de recherche.",
+    resetFilters: "Réinitialiser tous les filtres et voir le catalogue complet",
+    customGitTitle: "Assistant de téléchargement Git",
+    merchantPortal: "Portail Marchand",
+    homeTitle0: "Toute compétence. Tout service. Une plateforme mondiale.",
+    homeDesc0: "Conseil juridique, génie logiciel, artisanat physique, matériel sur mesure – listez votre capacité instantanément.",
+    homeAction0: "Inscrire votre Service",
+    homeTitle1: "Découvrez des trésors uniques faits à la main",
+    homeDesc1: "Explorez des sculptures en acajou, des sacs traditionnels en sisal et des pierres précieuses de créateurs mondiaux certifiés.",
+    homeAction1: "Acheter du Fait Main",
+    homeTitle2: "Noeuds Graphiques Technologiques de Nouvelle Génération",
+    homeDesc2: "Commandes instantanées de produits électroniques haut de gamme et de processeurs graphiques à haut rendement silicium.",
+    homeAction2: "Découvrir l'Électronique",
+    checkGitWizard: "Vérifier l'Assistant Git",
+    escrowShieldTitle: "Escorte d'Escrow Sécurisée Acheteur/Vendeur",
+    escrowShieldDesc: "La sécurité du compte séquestre bloque les paiements jusqu'à confirmation de livraison.",
+    globalLogisticsTitle: "Logistique Globale & Envois Locaux",
+    globalLogisticsDesc: "Les vendeurs coordonnent les livraisons physiques ou les liens sécurisés.",
+    curatedTrendingTitle: "Sélections Tendances Quotidiennes",
+    curatedTrendingDesc: "Consultez les scores de notation vérifiés et le registre des transactions.",
+    "All Vehicles/Parts": "Véhicules et Pièces",
+    "Art & Collectibles": "Art et Collections",
+    "Digital Downloads": "Téléchargements Numériques",
+    "Fashion/Beauty": "Mode et Beauté",
+    "Home/Office/Lifestyle": "Maison/Bureau/Style de vie",
+    "Industrial Equipment/Tools": "Équipements et Outils Industriels",
+    "Real Estate/Property": "Immobilier et Propriétés",
+    "Services": "Services Professionnels",
+    "Electronics": "Électronique"
+  },
+  de: {
+    tagline: "Entdecken Sie Produkte, Dienstleistungen und digitale Downloads weltweit",
+    searchPlaceholder: "Suche nach Produkten, Dienstleistungen, Geschäften...",
+    listings: "Angebote",
+    shops: "Shops",
+    sell: "Verkäuferkonsole",
+    cart: "Warenkorb",
+    login: "Anmelden",
+    register: "Konto erstellen",
+    protection: "Geschützter Treuhand-Service für Käufer und Verkäufer",
+    globalShipping: "Globale Logistik & Lokale Lieferungen",
+    curatedPicks: "Täglich kuratierte Trends",
+    whoTitle: "Wer ist Moscovium115?",
+    whoDesc: "Benannt nach dem superschweren Element ist Moscovium115 ein globaler Marktplatz, auf dem Entwickler physisches Handwerk, Tech-Assets und Consulting anbieten.",
+    statsBuyers: "50k+ Aktive Käufer",
+    statsSellers: "10k+ Händler",
+    statsCountries: "80+ Souveräne Regionen",
+    contactUs: "Git-Veröffentlichungs-Assistent",
+    popularHeader: "Aktuelle Bestseller - Beliebte Artikel",
+    recommendedHeader: "Nur für Sie personalisiert",
+    trendingServices: "Gefragteste Dienstleistungen heute",
+    featuredShops: "Top bewertete Händler-Boutiquen",
+    allCategories: "Alle Kategorien",
+    shopByCategory: "Nach Abteilung stöbern",
+    liveCatalogue: "LIVE-KATALOG",
+    matchingListings: "passende(s) Angebot(e) gefunden",
+    searchNoResult: "Wir konnten keine Artikel finden, die Ihren Filtern entsprechen.",
+    resetFilters: "Alle Filter zurücksetzen und gesamten Katalog anzeigen",
+    customGitTitle: "Git Upload-Assistent",
+    merchantPortal: "Händlerportal",
+    homeTitle0: "Jede Fähigkeit. Jeder Service. Eine globale Plattform.",
+    homeDesc0: "Rechtsberatung, Softwareentwicklung, physisches Handwerk, maßgeschneiderte Hardware – bieten Sie Ihre Dienste sofort an.",
+    homeAction0: "Dienstleistung listen",
+    homeTitle1: "Einzigartige handgemachte Schätze finden",
+    homeDesc1: "Entdecken Sie Skulpturen aus Mahagoni, traditionelle Sisal-Taschen und seltene Edelsteine von zertifizierten Kunsthandwerkern.",
+    homeAction1: "Handgemachtes shoppen",
+    homeTitle2: "Grafikprozessor-Rechenknoten der nächsten Generation",
+    homeDesc2: "Sofortige Bestellungen für Premium-Unterhaltungselektronik, leistungsstarke GPU-Knoten und Medien-Controller.",
+    homeAction2: "Elektronik erkunden",
+    checkGitWizard: "Git-Assistent öffnen",
+    escrowShieldTitle: "Geschützter Treuhand-Service für Käufer und Verkäufer",
+    escrowShieldDesc: "Die Treuhand-Sicherheit sperrt Auszahlungen bis zur Bestätigung der Lieferung.",
+    globalLogisticsTitle: "Globale Logistik & Lokale Lieferungen",
+    globalLogisticsDesc: "Verkäufer koordinieren Dropshipping oder sichere digitale Links.",
+    curatedTrendingTitle: "Täglich kuratierte Trends",
+    curatedTrendingDesc: "Prüfen Sie verifizierte Bewertungen und erfolgreiche Transaktionen.",
+    "All Vehicles/Parts": "Fahrzeuge & Teile",
+    "Art & Collectibles": "Kunst & Sammlerstücke",
+    "Digital Downloads": "Digitale Downloads",
+    "Fashion/Beauty": "Mode & Kosmetik",
+    "Home/Office/Lifestyle": "Haus/Büro/Lebensstil",
+    "Industrial Equipment/Tools": "Industrieausrüstung & Werkzeuge",
+    "Real Estate/Property": "Immobilien",
+    "Services": "Dienstleistungen",
+    "Electronics": "Elektronik"
+  },
+  zh: {
+    tagline: "探索全球创意产品、优质服务与数字源产下载",
+    searchPlaceholder: "搜索商品、专属服务、品牌店铺...",
+    listings: "所有商品",
+    shops: "店铺",
+    sell: "卖家控制台",
+    cart: "购物车",
+    login: "登录账户",
+    register: "创建新账户",
+    protection: "买家与卖家托管安全盾保障",
+    globalShipping: "全球物流协调及本地快速派送",
+    curatedPicks: "每日甄选全球趋势推荐",
+    whoTitle: "什么是莫斯科元素115?",
+    whoDesc: "Moscovium115 以超重元素命名，是一个充满高能量的全球数字交易市场。手艺创客、软件开发者和资深顾问可在此安全上架、快速交付各项资产。",
+    statsBuyers: "50k+ 活跃买家",
+    statsSellers: "10k+ 全球卖家",
+    statsCountries: "80+ 覆盖主权地区",
+    contactUs: "Git一键发布辅助",
+    popularHeader: "当前热门爆款商品",
+    recommendedHeader: "为您量身定制的精选",
+    trendingServices: "今日最受欢迎的专家服务",
+    featuredShops: "精选高评分卖家精品店",
+    allCategories: "所有商品分类",
+    shopByCategory: "按部门分类浏览",
+    liveCatalogue: "现货实时目录",
+    matchingListings: "个匹配的商品已被找到",
+    searchNoResult: "未找到符合您搜索过滤条件的商品。",
+    resetFilters: "重置所有过滤条件并查看完整目录",
+    customGitTitle: "Git 提交向导",
+    merchantPortal: "卖家中心门禁",
+    homeTitle0: "专属技能，精选服务，承载全球交易体系。",
+    homeDesc0: "法律咨询、软件开发工程、物理艺术品手办、定制极速主板芯片：快速上架，多网络无忧结算。",
+    homeAction0: "上架您的专属服务",
+    homeTitle1: "采购尊贵纯手工艺术藏品",
+    homeDesc1: "探索定制桃花心木雕刻、传统剑麻编织袋以及来自认证全球工匠的手工自然宝石。",
+    homeAction1: "采购手工作品",
+    homeTitle2: "次世代高性能图形计算节点租用",
+    homeDesc2: "即时下单极客消费电子，高并发GPU物理硅晶元节点，和可重映射按键控制器。",
+    homeAction2: "浏览电子芯片",
+    checkGitWizard: "查看 Git 发布引导",
+    escrowShieldTitle: "买家与卖家托管安全盾保障",
+    escrowShieldDesc: "平台安全托管资金，直至买方确收相符方可放款结算。",
+    globalShippingTitle: "全球物流协调及本地快速派送",
+    globalShippingDesc: "卖家快速配合落地直邮或云端私有链接一键安全分发。",
+    curatedTrendingTitle: "每日甄选全球趋势推荐",
+    curatedTrendingDesc: "经过审核评级的信用账本和累计交易证明。",
+    "All Vehicles/Parts": "车辆与配件",
+    "Art & Collectibles": "手工艺与收藏品",
+    "Digital Downloads": "数字资产与下载",
+    "Fashion/Beauty": "时尚与奢美美妆",
+    "Home/Office/Lifestyle": "居家办公生活美学",
+    "Industrial Equipment/Tools": "重工业设备与组装工具",
+    "Real Estate/Property": "房地产与奢华房产",
+    "Services": "专业咨询与技能服务",
+    "Electronics": "电子消费芯片"
+  },
+  ar: {
+    tagline: "اكتشف المنتجات والخدمات والتنزيلات الرقمية في جميع أنحاء العالم",
+    searchPlaceholder: "ابحث عن المنتجات، الخدمات، المحلات التجارية...",
+    listings: "القوائم لمنتجاتنا",
+    shops: "المحلات",
+    sell: "وحدة تحكم البائع",
+    cart: "سلة التسوق",
+    login: "تسجيل الدخول",
+    register: "إنشاء حساب الجديد",
+    protection: "ضمان الضمان المالي المحمي للمشتري والبائع",
+    globalShipping: "الخدمات اللوجستية العالمية والتسليم المحلي",
+    curatedPicks: "مختارات الاتجاهات اليومية المنسقة",
+    whoTitle: "من هو Moscovium115؟",
+    whoDesc: "سميت على اسم العنصر الثقيل، Moscovium115 هي سوق عالمية نشطة للغاية حيث يدرج المبدعون المشغولات اليدوية والأصول التقنية والخدمات الاستشارية على الفور.",
+    statsBuyers: "+50 ألف مشتري نشط",
+    statsSellers: "+10 آلاف تاجر معتمد",
+    statsCountries: "+80 دولة كبرى",
+    contactUs: "مساعد نشر مشاريع جيت",
+    popularHeader: "الأكثر شعبية الآن - العناصر الرائعة",
+    recommendedHeader: "لك خصيصاً - اختياراتنا المميزة",
+    trendingServices: "الخدمات الأكثر طلباً اليوم",
+    featuredShops: "أعلى متاجر التجار تقييماً",
+    allCategories: "القسم الشامل للتصنيفات",
+    shopByCategory: "تسوق حسب فئة القسم المفضلة",
+    liveCatalogue: "كتالوج الكتروني معروض الآن",
+    matchingListings: "تم العثور على قوائم مطابقة لتفضيلك",
+    searchNoResult: "لم نتمكن من العثور على سلع مطابقة لخيارات الفرز.",
+    resetFilters: "إعادة ضبط الاختيارات وعرض الكتالوج بالكامل",
+    customGitTitle: "معالج الرفع عبر جيت لملفاتك",
+    merchantPortal: "بوابة المفرز التجاري للبائعين",
+    homeTitle0: "أي مهارة. أي خدمة. منصة عالمية واحدة.",
+    homeDesc0: "الاستشارات القانونية، هندسة البرمجيات، الحرف اليدوية المادية، الأجهزة المخصصة - ضع مهاراتك الآن لتكسب بأمان.",
+    homeAction0: "ادرج خبرتك الخاصة",
+    homeTitle1: "ادرج الكنوز الفريدة المصنوعة يدوياً",
+    homeDesc1: "استكشف منحوتات الماهوجني الراقية، والحقائب التقليدية المحاكة من السيزال، والأحجار الكريمة النادرة غير المصقولة.",
+    homeAction1: "تسوق المنتجات اليدوية",
+    homeTitle2: "عقد حوسبة رسومية ذكية مخصصة للتعلم",
+    homeDesc2: "طلبات فورية على الإلكترونيات الاستهلاكية المتميزة، وعقد معالجة بطاقات السيليكون لتسريع الذكاء الاصطناعي.",
+    homeAction2: "استكشف الرقائق الإلكترونية",
+    checkGitWizard: "افحص مساعد النشر عبر جيت",
+    escrowShieldTitle: "ضمان الضمان المالي المحمي للمشتري والبائع",
+    escrowShieldDesc: "يقوم نظام الأموال المعلقة بحبس الأرباح حتى تكتمل تأكيدات التسليم والمطابقة.",
+    globalLogisticsTitle: "الخدمات اللوجستية العالمية والتسليم المحلي",
+    globalLogisticsDesc: "ينسق البائعون شحن الطرود المادية أو روابط الاستحواذ بشكل آمن بالكامل.",
+    curatedTrendingTitle: "مختارات الاتجاهات اليومية المنسقة",
+    curatedTrendingDesc: "راجع ثقة التقييمات وقوة الدفاتر الحسابية للشراء.",
+    "All Vehicles/Parts": "جميع المركبات وقطع الغيار",
+    "Art & Collectibles": "الفنون والتحف الثمينة",
+    "Digital Downloads": "تنزيلات رقمية برمجية",
+    "Fashion/Beauty": "الموضة وأدوات التجميل",
+    "Home/Office/Lifestyle": "المنزل والمكتب وأسلوب الحياة",
+    "Industrial Equipment/Tools": "المعدات الثقيلة والآلات الصناعية",
+    "Real Estate/Property": "مشاريع العقارات والأراضي",
+    "Services": "الخدمات المهنية والاستشارات",
+    "Electronics": "رقائق وحوسبة الإلكترونيات"
+  },
+  ru: {
+    tagline: "Откройте для себя товары, услуги и цифровые загрузки по всему миру",
+    searchPlaceholder: "Поиск товаров, услуг, магазинов...",
+    listings: "Объявления",
+    shops: "Магазины",
+    sell: "Панель Продавца",
+    cart: "Корзина",
+    login: "Войти",
+    register: "Создать аккаунт",
+    protection: "Защищенный эскроу-сервис для Покупателя/Продавца",
+    globalShipping: "Глобальная логистика и местная отправка",
+    curatedPicks: "Ежедневные тщательно отобранные тренды",
+    whoTitle: "Что такое Moscovium115?",
+    whoDesc: "Названный в честь сверхтяжелого элемента, Moscovium115 — это глобальный рынок с высокой атомной энергией, где создатели мгновенно размещают физические поделки, технологические активы и консалтинговые услуги.",
+    statsBuyers: "50k+ Активных Покупателей",
+    statsSellers: "10k+ Торговцев",
+    statsCountries: "80+ Суверенных Регионов",
+    contactUs: "Помощник публикации Git",
+    popularHeader: "Популярно прямо сейчас - Горячие товары",
+    recommendedHeader: "Только для Вас - Персональные предложения",
+    trendingServices: "Самые востребованные услуги сегодня",
+    featuredShops: "Популярные магазины продавцов с высоким рейтингом",
+    allCategories: "Все категории",
+    shopByCategory: "Купить по категориям разделов",
+    liveCatalogue: "ЖИВОЙ КАТАЛОГ",
+    matchingListings: "соответствующих объявлений найдено",
+    searchNoResult: "Мы не смогли найти товары, соответствующие вашим фильтрам поиска.",
+    resetFilters: "Сбросить все фильтры и просмотреть весь каталог",
+    customGitTitle: "Мастер загрузки Git",
+    merchantPortal: "Портал продавца",
+    homeTitle0: "Любой навык. Любая услуга. Одна глобальная платформа.",
+    homeDesc0: "Юридический консалтинг, разработка ПО, физические поделки, кастомное оборудование — разместите свое предложение мгновенно, зарабатывайте безопасно через эскроу.",
+    homeAction0: "Разместить услугу",
+    homeTitle1: "Размещайте уникальные сокровища ручной работы",
+    homeDesc1: "Изучите изготовленные на заказ скульптуры из красного дерева, традиционные плетеные сумки из сизали и редкие коллекционные драгоценные камни от проверенных мастеров.",
+    homeAction1: "Купить ручную работу",
+    homeTitle2: "Графические узлы следующего поколения",
+    homeDesc2: "Мгновенные заказы на премиальную бытовую электронику, высокопроизводительные кремниевые узлы графических процессоров и перенастраиваемые механические медиа-контроллеры.",
+    homeAction2: "Исследовать электронику",
+    checkGitWizard: "Проверить Мастер загрузки Git",
+    escrowShieldTitle: "Защищенный эскроу-сервис для Покупателя/Продавца",
+    escrowShieldDesc: "Безопасность эскроу блокирует выплаты до тех пор, пока подтверждение сделки не совпадет.",
+    globalLogisticsTitle: "Глобальная логистика и местная отправка",
+    globalLogisticsDesc: "Продавцы координируют физическую доставку или мгновенные ссылки безопасно.",
+    curatedTrendingTitle: "Ежедневные тщательно отобранные тренды",
+    curatedTrendingDesc: "Проверяйте верифицированные рейтинги и количество совершенных транзакций.",
+    "All Vehicles/Parts": "Транспорт и запчасти",
+    "Art & Collectibles": "Искусство и коллекционирование",
+    "Digital Downloads": "Цифровые загрузки",
+    "Fashion/Beauty": "Мода и красота",
+    "Home/Office/Lifestyle": "Дом, офис, образ жизни",
+    "Industrial Equipment/Tools": "Промышленное оборудование и инструменты",
+    "Real Estate/Property": "Недвижимость",
+    "Services": "Услуги",
+    "Electronics": "Электроника"
+  },
+  it: {
+    tagline: "Scopri prodotti, servizi e download digitali in tutto il mondo",
+    searchPlaceholder: "Cerca prodotti, servizi, negozi...",
+    listings: "Annunci",
+    shops: "Negozi",
+    sell: "Console del Venditore",
+    cart: "Carrello",
+    login: "Accedi",
+    register: "Crea un Account",
+    protection: "Scorta di Deposito a Garanzia Protetta per Acquirente/Venditore",
+    globalShipping: "Logistica Globale & Spedizioni Locali",
+    curatedPicks: "Selezioni di Tendenza Giornaliere curate",
+    whoTitle: "Chi è Moscovium115?",
+    whoDesc: "Prende il nome dall'elemento superpesante, Moscovium115 è un mercato globale ad alta energia in cui i creatori pubblicano istantaneamente artigianato fisico, risorse tecnologiche e servizi di consulenza.",
+    statsBuyers: "Oltre 50.000 Acquirenti Attivi",
+    statsSellers: "Oltre 10.000 Commercianti",
+    statsCountries: "Oltre 80 Regioni Sovrane",
+    contactUs: "Assistente per la pubblicazione di Git",
+    popularHeader: "Popolari in questo momento - Articoli di tendenza",
+    recommendedHeader: "Solo per te - Consigli personalizzati",
+    trendingServices: "Servizi più richiesti oggi",
+    featuredShops: "Boutique di commercianti con valutazioni elevate",
+    allCategories: "Tutte le Categorie",
+    shopByCategory: "Acquista per categoria di reparto",
+    liveCatalogue: "CATALOGO LIVE",
+    matchingListings: "annunci corrispondenti trovati",
+    searchNoResult: "Impossibile trovare articoli corrispondenti ai filtri di ricerca selezionati.",
+    resetFilters: "Reimposta tutti i filtri e visualizza il catalogo completo",
+    customGitTitle: "Creazione guidata di caricamento Git",
+    merchantPortal: "Portale del Commerciante",
+    homeTitle0: "Qualsiasi competenza. Qualsiasi servizio. Un'unica piattaforma globale.",
+    homeDesc0: "Consulenza legale, ingegneria del software, artigianato fisico, hardware personalizzato: elenca la tua capacità all'istante, guadagna in sicurezza tramite deposito a garanzia.",
+    homeAction0: "Elenca il Tuo Servizio",
+    homeTitle1: "Elenca Tesori Unici Fatti a Mano",
+    homeDesc1: "Esplora sculture in mogano su misura, borse tradizionali in sisal intrecciate a mano e gemme sfuse rare e da collezione di artigiani globali verificati.",
+    homeAction1: "Acquista Fatti a Mano",
+    homeTitle2: "Nodi di elaborazione grafica tech di nuova generazione",
+    homeDesc2: "Ordini istantanei su elettronica di consumo premium, nodi di silicio GPU ad alta elaborazione e controller multimediali meccanici rimappabili.",
+    homeAction2: "Esplora l'Elettronica",
+    checkGitWizard: "Controlla la procedura guidata di caricamento di Git",
+    escrowShieldTitle: "Scorta di Deposito a Garanzia Protetta per Acquirente/Venditore",
+    escrowShieldDesc: "La sicurezza del deposito a garanzia blocca i pagamenti fino a quando la conferma dell'inserzione corrisponde.",
+    globalLogisticsTitle: "Logistica Globale & Spedizioni Locali",
+    globalLogisticsDesc: "I venditori coordinano il dropshipping fisico o i collegamenti istantanei in modo sicuro.",
+    curatedTrendingTitle: "Selezioni di Tendenza Giornaliere curate",
+    curatedTrendingDesc: "Visualizza i punteggi delle valutazioni verificati e il registro delle transazioni.",
+    "All Vehicles/Parts": "Veicoli e ricambi",
+    "Art & Collectibles": "Arte e collezionismo",
+    "Digital Downloads": "Download digitali",
+    "Fashion/Beauty": "Moda e bellezza",
+    "Home/Office/Lifestyle": "Casa, ufficio e stile di vita",
+    "Industrial Equipment/Tools": "Equipaggiamento e strumenti industriali",
+    "Real Estate/Property": "Immobiliare",
+    "Services": "Servizi professionali",
+    "Electronics": "Elettronica"
   }
 };
 
 export default function App() {
   const [lang, setLang] = useState<string>('en');
+  const [selectedCurrencyCode, setSelectedCurrencyCode] = useState<string>('USD');
+  const activeCurrency = CURRENCIES.find(c => c.code === selectedCurrencyCode) || CURRENCIES[0];
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified State Engine
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
+  const [ads, setAds] = useState<MoscoviumAd[]>(INITIAL_ADS);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [sellerStats, setSellerStats] = useState<SellerStats>(INITIAL_SELLER_STATS);
@@ -131,6 +595,7 @@ export default function App() {
   // Cart operations
   const handleAddToCart = (item: Item, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    playNotificationSound();
     setCartItems((prev) => {
       const existing = prev.find((i) => i.item.id === item.id);
       if (existing) {
@@ -166,6 +631,7 @@ export default function App() {
 
     setOrders((prev) => [newOrder, ...prev]);
     setCartItems([]);
+    playCashRegisterSound();
     alert(`Escrow Checkout Confirmed!\nOrder Code: ${newOrder.id}\nThank you, ${customerName}. An item access pass has been dispatched to ${customerEmail}.`);
   };
 
@@ -207,6 +673,7 @@ export default function App() {
 
       const botMsg = { sender: 'bot' as const, text: responseText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
       setChatMessages((prev) => [...prev, botMsg]);
+      playNotificationSound();
     }, 1200);
   };
 
@@ -274,17 +741,68 @@ export default function App() {
           {/* Language and view selector */}
           <div className="flex items-center gap-3">
             
+            {/* Currency Selector dropdown */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-bold text-slate-400">💱</span>
+              <select 
+                value={selectedCurrencyCode} 
+                onChange={(e) => {
+                  setSelectedCurrencyCode(e.target.value);
+                  playNotificationSound();
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-750 focus:ring-1 focus:ring-red-500/35 focus:outline-none cursor-pointer transition-all hover:bg-slate-50 font-mono"
+              >
+                {CURRENCIES.map(c => (
+                  <option key={`header-${c.code}`} value={c.code}>
+                    {c.flag} {c.code} ({c.symbol})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Language Selector dropdown option */}
             <div className="flex items-center gap-1">
-              <Globe className="h-4 w-4 text-slate-400" />
+              <Globe className="h-4 w-4 text-slate-400 animate-pulse" />
               <select 
                 value={lang} 
-                onChange={(e) => setLang(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none"
+                onChange={(e) => {
+                  setLang(e.target.value);
+                  playNotificationSound();
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-red-500/35 focus:outline-none cursor-pointer transition-all hover:bg-slate-50"
               >
                 <option value="en">English (US)</option>
                 <option value="sw">Kiswahili (KE)</option>
+                <option value="es">Español (ES)</option>
+                <option value="fr">Français (FR)</option>
+                <option value="de">Deutsch (DE)</option>
+                <option value="it">Italiano (IT)</option>
+                <option value="ru">Русский (RU)</option>
+                <option value="zh">中文 (CN)</option>
+                <option value="ar">العربية (AR)</option>
               </select>
+            </div>
+
+            {/* Sound Effects Quick Test Buttons */}
+            <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+              <button
+                type="button"
+                onClick={() => playCashRegisterSound()}
+                className="h-7 w-7 rounded-lg bg-orange-50 hover:bg-orange-100 border border-orange-200/60 transition-all active:scale-95 flex items-center justify-center text-xs cursor-pointer select-none"
+                title="Test Money Bell Sound"
+                id="btn-test-cash-register"
+              >
+                🔔
+              </button>
+              <button
+                type="button"
+                onClick={() => playNotificationSound()}
+                className="h-7 w-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 transition-all active:scale-95 flex items-center justify-center text-xs cursor-pointer select-none"
+                title="Test Notification Chime"
+                id="btn-test-notification"
+              >
+                🎵
+              </button>
             </div>
 
             {/* Navigation Tabs (Router simulation) */}
@@ -387,6 +905,21 @@ export default function App() {
         {currentView === 'marketplace' && (
           <div className="space-y-6">
             
+            <MoscoviumAds 
+              lang={lang}
+              ads={ads}
+              setAds={setAds}
+              onSelectCategory={(category) => {
+                setSelectedCategory(category);
+              }}
+              onSwitchView={(view) => {
+                setCurrentView(view);
+              }}
+              setSearchQuery={setSearchQuery}
+              sellerStats={sellerStats}
+              onUpdateStats={setSellerStats}
+            />
+
             {/* Hero sliding carousel and guarantees */}
             <section className="mx-auto w-full max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
               <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200">
@@ -466,7 +999,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">{t('protection')}</h3>
-                    <p className="text-xs text-slate-400 mt-1 font-sans">Escrow security locks payouts until listing confirmation matches.</p>
+                    <p className="text-xs text-slate-400 mt-1 font-sans">{t('escrowShieldDesc')}</p>
                   </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-4 flex gap-3 shadow-xs">
@@ -475,7 +1008,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">{t('globalShipping')}</h3>
-                    <p className="text-xs text-slate-400 mt-1 font-sans">Sellers coordinate physical dropshipping or instant links securely.</p>
+                    <p className="text-xs text-slate-400 mt-1 font-sans">{t('globalLogisticsDesc')}</p>
                   </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-4 flex gap-3 shadow-xs">
@@ -484,15 +1017,22 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">{t('curatedPicks')}</h3>
-                    <p className="text-xs text-slate-400 mt-1 font-sans">Review verified rating scores and purchase ledger counts.</p>
+                    <p className="text-xs text-slate-400 mt-1 font-sans">{t('curatedTrendingDesc')}</p>
                   </div>
                 </div>
               </div>
             </section>
 
+            {/* Moscovium Currency Bureau de Change Widget */}
+            <CurrencyConverter 
+              selectedStoreCurrency={selectedCurrencyCode}
+              onSelectStoreCurrency={setSelectedCurrencyCode}
+              lang={lang}
+            />
+
             {/* Horizontal Categories Filter Rail */}
-            <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-3">
-              <h3 className="text-xs font-black tracking-wider uppercase text-slate-500">Shop by department category</h3>
+            <section id="marketplace-anchor" className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-3">
+              <h3 className="text-xs font-black tracking-wider uppercase text-slate-500">{t('shopByCategory')}</h3>
               <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
                 <button
                   onClick={() => setSelectedCategory(null)}
@@ -503,7 +1043,7 @@ export default function App() {
                   }`}
                 >
                   <Grid className="h-3.5 w-3.5" />
-                  <span>All Categories</span>
+                  <span>{t('allCategories')}</span>
                 </button>
                 {CATEGORIES.map((cat) => {
                   const pathPattern = cat.name.toLowerCase().replace(/\s+/g, '-');
@@ -518,7 +1058,7 @@ export default function App() {
                       }`}
                     >
                       {renderCategoryIcon(cat.icon)}
-                      <span>{cat.name}</span>
+                      <span>{t(cat.name)}</span>
                     </button>
                   );
                 })}
@@ -529,23 +1069,23 @@ export default function App() {
             <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 rounded px-2 py-0.5 font-mono">LIVE CATALOGUE</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 rounded px-2 py-0.5 font-mono">{t('liveCatalogue')}</span>
                   <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight mt-1.5 font-sans">
-                    {selectedCategory ? `${CATEGORIES.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === selectedCategory)?.name}` : t('popularHeader')}
+                    {selectedCategory ? `${t(CATEGORIES.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === selectedCategory)?.name || '')}` : t('popularHeader')}
                   </h2>
                 </div>
-                <span className="text-xs text-slate-500 font-sans font-medium">{filteredItems.length} matching listing(s) found</span>
+                <span className="text-xs text-slate-500 font-sans font-medium">{filteredItems.length} {t('matchingListings')}</span>
               </div>
 
               {filteredItems.length === 0 ? (
                 <div className="py-20 text-center space-y-3 bg-white border border-slate-200 rounded-3xl p-6">
                   <span className="text-4xl text-slate-300 block">👀</span>
-                  <p className="text-sm font-semibold text-slate-500">We couldn't find items that match your search filters.</p>
+                  <p className="text-sm font-semibold text-slate-500">{t('searchNoResult')}</p>
                   <button 
                     onClick={() => { setSelectedCategory(null); setSearchQuery(''); }}
                     className="text-red-600 text-xs font-bold tracking-wide hover:underline focus:outline-none"
                   >
-                    Reset all filters and view full catalogue
+                    {t('resetFilters')}
                   </button>
                 </div>
               ) : (
@@ -556,6 +1096,7 @@ export default function App() {
                       item={item} 
                       onViewDetails={(i) => setSelectedItem(i)}
                       onAddToCart={(i, e) => handleAddToCart(i, e)}
+                      currency={activeCurrency}
                     />
                   ))}
                 </div>
@@ -608,6 +1149,10 @@ export default function App() {
               onAddListing={handleAddListing}
               onRemoveListing={handleRemoveListing}
               onUpdateStats={setSellerStats}
+              currency={activeCurrency}
+              ads={ads}
+              onAddAd={(newAd) => setAds((prev) => [newAd, ...prev])}
+              onUpdateAds={setAds}
             />
           </section>
         )}
@@ -696,6 +1241,7 @@ export default function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckoutSuccess={handleCheckoutSuccess}
+        currency={activeCurrency}
       />
 
       {/* Item inspection dialog */}
@@ -703,6 +1249,7 @@ export default function App() {
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
         onAddToCart={handleAddToCart}
+        currency={activeCurrency}
       />
 
       {/* Dynamic footer matching extracted dump styling */}

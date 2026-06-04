@@ -7,9 +7,17 @@ interface ItemCardProps {
   item: Item;
   onViewDetails: (item: Item) => void;
   onAddToCart: (item: Item, e: React.MouseEvent) => void;
+  currency?: { code: string; symbol: string; rate: number };
 }
 
-export default function ItemCard({ item, onViewDetails, onAddToCart }: ItemCardProps) {
+export default function ItemCard({ item, onViewDetails, onAddToCart, currency }: ItemCardProps) {
+  const formatPrice = (usdPrice: number) => {
+    if (!currency) {
+      return `$${usdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const converted = usdPrice * currency.rate;
+    return `${currency.symbol} ${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
   const getBadgeIcon = () => {
     switch (item.type) {
       case 'service': return <Zap className="h-3 w-3" />;
@@ -94,11 +102,11 @@ export default function ItemCard({ item, onViewDetails, onAddToCart }: ItemCardP
           <div className="min-w-0">
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-base font-extrabold text-slate-900 font-mono">
-                ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatPrice(item.price)}
               </span>
               {item.originalPrice && (
                 <span className="text-xs text-slate-400 line-through font-mono">
-                  ${item.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatPrice(item.originalPrice)}
                 </span>
               )}
             </div>

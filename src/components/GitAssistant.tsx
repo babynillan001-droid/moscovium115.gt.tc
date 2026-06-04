@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, Check, Terminal, GitBranch, Shield, Cpu, HelpCircle, Code, List, Award, CheckCircle2 } from 'lucide-react';
+import { playNotificationSound } from '../lib/audio';
 
 export default function GitAssistant() {
   const [gitUrl, setGitUrl] = useState('https://github.com/your-username/moscovium115.git');
@@ -10,6 +11,7 @@ export default function GitAssistant() {
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(id);
+    playNotificationSound();
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 

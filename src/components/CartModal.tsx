@@ -9,6 +9,7 @@ interface CartModalProps {
   onUpdateQuantity: (itemId: string, qty: number) => void;
   onRemoveItem: (itemId: string) => void;
   onCheckoutSuccess: (customerName: string, customerEmail: string) => void;
+  currency?: { code: string; symbol: string; rate: number };
 }
 
 export default function CartModal({
@@ -17,7 +18,8 @@ export default function CartModal({
   cartItems,
   onUpdateQuantity,
   onRemoveItem,
-  onCheckoutSuccess
+  onCheckoutSuccess,
+  currency
 }: CartModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [customerName, setCustomerName] = useState('Brian Wekesa');
@@ -25,6 +27,14 @@ export default function CartModal({
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'processing'>('cart');
 
   if (!isOpen) return null;
+
+  const formatPrice = (usdPrice: number) => {
+    if (!currency) {
+      return `$${usdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const converted = usdPrice * currency.rate;
+    return `${currency.symbol} ${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   const total = cartItems.reduce((acc, item) => acc + (item.item.price * item.quantity), 0);
 
@@ -121,7 +131,7 @@ export default function CartModal({
                         </div>
 
                         <span className="text-sm font-bold text-slate-900 font-mono">
-                          ${(cartItem.item.price * cartItem.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatPrice(cartItem.item.price * cartItem.quantity)}
                         </span>
                       </div>
                     </div>
@@ -143,7 +153,7 @@ export default function CartModal({
               <div className="p-5 bg-slate-50 border-t border-slate-150 space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-semibold text-slate-500">Order Subtotal</span>
-                  <span className="font-bold text-slate-900 font-mono text-lg">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-bold text-slate-900 font-mono text-lg">{formatPrice(total)}</span>
                 </div>
 
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2.5 text-[11px] text-emerald-800">
@@ -202,7 +212,7 @@ export default function CartModal({
                 type="submit"
                 className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-[0.98]"
               >
-                Pay ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Now
+                Pay {formatPrice(total)} Now
               </button>
             </div>
           </form>
